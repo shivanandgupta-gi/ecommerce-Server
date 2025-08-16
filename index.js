@@ -14,7 +14,7 @@ const app = express();
 app.use(cors());
 app.use(express.json()); // Parses incoming JSON requests
 app.use(cookieParser()); // Parses cookies from the request headers
-app.use(morgan());       // Logs HTTP requests to the console
+app.use(morgan("dev"));       // Logs HTTP requests to the console
 app.use(helmet({         // Secures HTTP headers
     crossOriginResourcePolicy: false
 }));
