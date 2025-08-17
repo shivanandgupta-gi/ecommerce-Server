@@ -8,6 +8,7 @@ import morgan from 'morgan';              // HTTP request logger middleware
 import helmet from 'helmet';              // Helps secure Express apps by setting HTTP headers
 import connectDB from './config/connectDB.js';
 import userRoutes from './route/user.route.js';
+import categoryRouter from './route/category.route.js';
 
 // Create an Express application
 const app = express();
@@ -27,6 +28,7 @@ app.get("/", (request, response) => {
 });
 
 app.use('/api/user',userRoutes);
+app.use('/api/category',categoryRouter);
 
 connectDB().then(()=>{
     app.listen(process.env.PORT,()=>{
