@@ -577,7 +577,7 @@ export async function userDetails(request, response) {
             success: true
         });
     } catch (error) {
-      console.error(error);
+      
         return response.status(500).json({
             message: "Something is wrong",
             error: true,
