@@ -9,6 +9,7 @@ import helmet from 'helmet';              // Helps secure Express apps by settin
 import connectDB from './config/connectDB.js';
 import userRoutes from './route/user.route.js';
 import categoryRouter from './route/category.route.js';
+import productRoute from './route/product.route.js';
 
 // Create an Express application
 const app = express();
@@ -29,6 +30,7 @@ app.get("/", (request, response) => {
 
 app.use('/api/user',userRoutes);
 app.use('/api/category',categoryRouter);
+app.use('/api/product' ,productRoute);
 
 connectDB().then(()=>{
     app.listen(process.env.PORT,()=>{
