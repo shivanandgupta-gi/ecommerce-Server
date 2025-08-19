@@ -10,6 +10,7 @@ import connectDB from './config/connectDB.js';
 import userRoutes from './route/user.route.js';
 import categoryRouter from './route/category.route.js';
 import productRoute from './route/product.route.js';
+import cartRouter from './route/cart.route.js';
 
 // Create an Express application
 const app = express();
@@ -31,6 +32,7 @@ app.get("/", (request, response) => {
 app.use('/api/user',userRoutes);
 app.use('/api/category',categoryRouter);
 app.use('/api/product' ,productRoute);
+app.use('/api/cart' , cartRouter);
 
 connectDB().then(()=>{
     app.listen(process.env.PORT,()=>{

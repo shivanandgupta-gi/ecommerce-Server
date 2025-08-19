@@ -23,7 +23,8 @@ const auth = async (request, response, next) => {
             });
         }
 
-        request.userId = decode.Id;
+        request.userId = decode.id; // lowercase 'id'
+
         next();
     } catch (error) {
         return response.status(500).json({
