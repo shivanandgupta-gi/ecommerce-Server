@@ -124,7 +124,7 @@ export async function updateCartItemQut(request,response) {
 export async function deleteCartItem(request,response) {
     try{
         const userId=request.userId; //from middleware
-        const {_id ,productId}=request.body; //id to delete
+        const {_id ,productId}=request.body; //id to delete product id help to delete form shoping cart in usermodel to delete
 
         if(!_id){
             return response.status(400).json({
@@ -133,13 +133,13 @@ export async function deleteCartItem(request,response) {
                 error:true
             })
         }
-        //id to delete
+        //cart id to delete
         const deleteCartItem = await CartProductModel.deleteOne({
             _id: _id,
             userId: userId
-            });
+        });
 
-        //find user 
+        //find user to delete product id
         const user=await UserModel.findOne({_id:userId})
         const cartItems=user?.shopping_cart; //to get shopping cart detail from user model to delete from theis also
         //delete from shopping cart

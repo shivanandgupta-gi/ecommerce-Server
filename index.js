@@ -11,6 +11,7 @@ import userRoutes from './route/user.route.js';
 import categoryRouter from './route/category.route.js';
 import productRoute from './route/product.route.js';
 import cartRouter from './route/cart.route.js';
+import myListRoute from './route/mylist.route.js';
 
 // Create an Express application
 const app = express();
@@ -33,6 +34,9 @@ app.use('/api/user',userRoutes);
 app.use('/api/category',categoryRouter);
 app.use('/api/product' ,productRoute);
 app.use('/api/cart' , cartRouter);
+app.use('/api/myList', myListRoute);
+
+
 
 connectDB().then(()=>{
     app.listen(process.env.PORT,()=>{
