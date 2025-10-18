@@ -8,9 +8,9 @@ const categorySchema=mongoose.Schema({
         required:true,
         trim:true
     },
-        images: [{
+     images: [{
         type: String,
-        }],
+    }],
     color: {
         type: String,
     },

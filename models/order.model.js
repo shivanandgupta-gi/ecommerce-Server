@@ -1,22 +1,42 @@
 import mongoose from "mongoose";
+import { v4 as uuidv4 } from "uuid";
 
 const orderSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.ObjectId,
         ref: 'User'
     },
+    products:[
+        {
+            productId: {
+                type: String
+            },
+            productTitle:{
+                type:String
+            },
+            quantity:{
+                type:Number
+            },
+            price:{ 
+                type:Number
+            },
+            image:{
+                type:String
+            },
+            subTotal:{
+                type:Number
+            }
+        }
+    ],
     orderId: {
         type: String,
         required: [true, "Provide orderId"],
-        unique: true
+        unique: true,
+        default:uuidv4
     },
-    productId: {
-        type: mongoose.Schema.ObjectId,
-        ref: 'product'
-    },
-    product_details: {
-        name: String,
-        image: Array
+    order_status:{
+        type:String,
+        default:"pending"
     },
     paymentId: {
         type: String,
@@ -30,13 +50,13 @@ const orderSchema = new mongoose.Schema({
         type: mongoose.Schema.ObjectId,
         ref: 'address'
     },
-    subTotalAmt: {
+    totalAmt: {
         type: Number,
         default: 0
     },
    
-},{timestamp:true});
+},{timestamps:true});
 
 const OrderModel=mongoose.model("order",orderSchema);
 
-export default OrderModel;
+export default OrderModel; 

@@ -6,7 +6,7 @@ const auth = async (request, response, next) => {
     || request.cookies.refresh_token
     || request?.headers?.authorization?.split(" ")[1];
 
-
+        
         if (!token) {
             return response.status(400).json({
                 message: "Provide token"

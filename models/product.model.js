@@ -51,13 +51,17 @@ const product=mongoose.Schema({
     },
     category: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Category',
+        ref: 'catergory',
     },
     countInStock: {
         type: Number,
         required: true
     },
     rating: {
+        type: Number,
+        default: 0
+    },
+    sale: {
         type: Number,
         default: 0
     },
@@ -69,10 +73,12 @@ const product=mongoose.Schema({
         type: Number,
         required: true
     },
-    productRam: {
-        type: String,
-        default: null
-    },
+    productRam:[
+        {
+            type: String,
+            default: null
+        }
+    ],
     size: [
         {
             type: String,
@@ -88,6 +94,19 @@ const product=mongoose.Schema({
     dateCreated:{
         type:Date,
         default:Date.now
+    },
+    //this for the banner like homeslider2 50% one image and rest 50% 2 image
+    bannerimages: [{
+            type: String,
+            required: true
+    }],
+    bannerTitlename:{
+        type:String,
+        required:true
+    },
+     isDisplayOnHomeBanner:{ //this for the shown that image is display on banner or not when switch button click on then shown on screen else not shown
+        type:Boolean,
+        default:false
     },
     
 },{timestamps:true});

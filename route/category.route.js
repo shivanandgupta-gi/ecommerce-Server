@@ -1,6 +1,6 @@
-import {Router} from 'express';
+import {Router} from 'express'; 
 import upload from '../middlewares/multer.js';
-import { countCategory, createCategory, deleteCategoryController, getAllCategory, getCategoryById, removeImageController, updateCategory, uploadImages } from '../controllers/category.controller.js';
+import { countCategory, createCategory, deleteCategoryController, getAllCategory, getCategoryById, removeImageController, updateCategory, updateSubCategory, uploadImages } from '../controllers/category.controller.js';
 import auth from '../middlewares/auth.js';
 
 const categoryRouter=Router();
@@ -15,6 +15,6 @@ categoryRouter.get("/:id",getCategoryById);
 categoryRouter.delete("/delete-image",auth, removeImageController)
 categoryRouter.delete("/:id",auth, deleteCategoryController)
 categoryRouter.put("/:id",auth, updateCategory)
+categoryRouter.put("/subcategory/:id",auth, updateSubCategory)
 
-
-export default categoryRouter;
+export default categoryRouter; 

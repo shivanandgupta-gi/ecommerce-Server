@@ -12,46 +12,42 @@ cloudinary.config({
 });
 var imageArr=[];
 
-//for image upload by cloudanary
-export async function uploadImages(request,response) {
-  try{
+// for image upload by cloudinary  
+export async function uploadImages(request, response) {
+  try {
+    const files = request.files;
+    let uploadedImages = [];
 
-    const image=request.files;
-    for (let i = 0; i < image?.length; i++) { //? is chaning method to optional check one by one if true then next if null then return undefined
-      const options = {
+    for (let i = 0; i < files?.length; i++) {
+      const result = await cloudinary.uploader.upload(files[i].path, {
         use_filename: true,
-        unique_filename: false,
+        unique_filename: true,
         overwrite: false,
-      };
-      //upload
-      await cloudinary.uploader.upload(
-        image[i].path,
-        options,
-        function (error, result) {
-          if (result) {
-            imageArr.push(result.secure_url);
-            fs.unlinkSync(`uploads/${request.files[i].filename}`); //Deletes a file synchronously from your local file system  Path to the locally saved file.
-            console.log(request.files[i].filename);//uploads folder first load onit and then delete automatic
-          }
-        }
-      );
+      });
+
+      // delete local file after upload
+      fs.unlinkSync(files[i].path);
+
+      uploadedImages.push(result.secure_url);
+      console.log("Uploaded:", files[i].filename);
     }
-    
-   
 
     return response.status(200).json({
-      image:imageArr[0]
+      success: true,
+      allImages: imageArr   ,     // optional: global store
+      images: uploadedImages,   // ✅ send array of all uploaded URLs
     });
-  }
-  catch(error){
-    console.error(error)
+     } catch (error) {
+    console.error("Upload error:", error);
     return response.status(500).json({
       message: "Internal Server Error",
-      error:true,
-      success:false
-  })
+      error: true,
+      success: false,
+    });
+  }
 }
-}
+
+ 
 
 //create category name  image upload  on above with theri link 
 export async function createCategory(request,response) {
@@ -59,7 +55,7 @@ export async function createCategory(request,response) {
         //for category name
         let category = new categoryModel({
             name: request.body.name,
-            images: imageArr,
+            images: request.body.images || [],
             color: request.body.color,
             parentId: request.body.parentId,
             parentCatName: request.body.parentCatName,
@@ -75,7 +71,7 @@ export async function createCategory(request,response) {
         //save category
         category=await category.save();
         imageArr=[]; //after save array will blank
-        return response.status(500).json({
+        return response.status(200).json({
             message: "Category created successfully",
             error: false,
             success: true,
@@ -92,17 +88,7 @@ export async function createCategory(request,response) {
 
 }
 
-//get all category (fetch the category)like
-// {
-//     _id:45566,
-//     name:"Electronics",
-//     parentid:null  //if null means it is category we fetch this
-// }
-// {
-//     _id:45567,
-//     name:"bulb",
-//     parentid:45566 //if not null means it is sub category
-// }
+//for all category obtained
 export async function getAllCategory(request,response) {
     try{
         const categories = await categoryModel.find(); 
@@ -217,10 +203,10 @@ export async function getCategoryById(request,response) {
     })
   }
 }
-
+ 
 //delete image for cloudananry
 export async function removeImageController(request,response) {
-  const imgUrl=request.query.img; //img1.jpg ka url
+  const imgUrl=decodeURIComponent(request.query.img); //img1.jpg ka url
   //https://res.cloudinary.com/dawav6pbh/image/upload/v1755235469/1755235462841_Screenshot_1.png" come like this
    const urlArr = imgUrl.split("/");
   // ["https:","res.cloudinary.com","dawav6pbh","image","upload","v1755235469","1755235462841_Screenshot_1.png"]
@@ -235,66 +221,75 @@ export async function removeImageController(request,response) {
     );
 
     if (res) {
-      response.status(200).send(res);
+      return response.status(200).send(res).json({
+        message: "Image deleted successfully",
+        success: true,
+        error: false,
+      }
+      );
     }
   }
 }
 
-//delte category
-export async function deleteCategoryController(request,response) {
-    try{
+// delete category
+export async function deleteCategoryController(request, response) {
+    try {
         const category = await categoryModel.findById(request.params.id);
-        const images = category.images;
-        //same as above
-        for (let img of images) {
-        const imgUrl = img;
-        const urlArr = imgUrl.split("/");
-        const image = urlArr[urlArr.length - 1];
 
-        const imageName = image.split(".")[0];
-
-        cloudinary.uploader.destroy(imageName, (error, result) => {
-            
-        });
-        }
-        //if category delete then sub category also delete
-        const subCategory = await categoryModel.find({
-        parentId: request.params.id
-        });
-        for (let i = 0; i < subCategory.length; i++) {
-            const thirdsubCategory = await categoryModel.find({
-                parentId: subCategory[i]._id
+        if (!category) {
+            return response.status(404).json({
+                message: "Category not found",
+                success: false,
+                error: true
             });
+        }
 
-            for (let i = 0; i < thirdsubCategory.length; i++) {
-                const deletedThirdSubCat = await categoryModel.findByIdAndDelete(thirdsubCategory[i]._id);
+        // ✅ delete images safely
+        if (category.images && category.images.length > 0) {
+            for (let img of category.images) {
+                try {
+                    const urlArr = img.split("/");
+                    const image = urlArr[urlArr.length - 1];
+                    const imageName = image.split(".")[0];
+
+                    await cloudinary.uploader.destroy(imageName);
+                } catch (err) {
+                    console.error("Error deleting image from Cloudinary:", err);
+                }
+            }
+        }
+
+        // ✅ delete subcategories & third-level subcategories
+        const subCategories = await categoryModel.find({ parentId: request.params.id });
+
+        for (let subCat of subCategories) {
+            const thirdLevelSubCats = await categoryModel.find({ parentId: subCat._id });
+
+            for (let thirdCat of thirdLevelSubCats) {
+                await categoryModel.findByIdAndDelete(thirdCat._id);
             }
 
-            const deletedSubCat = await categoryModel.findByIdAndDelete(subCategory[i]._id);
+            await categoryModel.findByIdAndDelete(subCat._id);
         }
-        const deletcat=await categoryModel.findByIdAndDelete(request.params.id);
-        if(!deletcat){
-            response.status(404).json({
-                message: "Category not found",
-                success:false,
-                error:true
-            })
-        }
-        response.status(200).json({
+
+        // ✅ delete main category
+        await categoryModel.findByIdAndDelete(request.params.id);
+
+        return response.status(200).json({
             message: "Category deleted successfully",
-            success:true,
-            error:false
-        })
-    }
-    catch(error){
-        console.error(error)
+            success: true,
+            error: false
+        });
+    } catch (error) {
+        console.error("Delete Category Error:", error);
         return response.status(500).json({
-        message: "Internal Server Error",
-        success:false,
-        error:true
-        })
-  }
+            message: "Internal Server Error",
+            success: false,
+            error: true
+        });
+    }
 }
+
 
 //update the category
 export async function updateCategory(request, response) {
@@ -314,7 +309,7 @@ export async function updateCategory(request, response) {
                 message: "Category not found",
                 success:false,
                 error:true
-            })
+          })
         }
         //image null
         imageArr=[];
@@ -326,13 +321,53 @@ export async function updateCategory(request, response) {
         })
     }
     catch(error){
+      console.error(error)
         return response.status(500).json({
         message: "Internal Server Error",
         success:false,
         error:true
+      })
+  }
+}     
+
+
+export async function updateSubCategory(request, response) {
+    try{
+        const category=await categoryModel.findByIdAndUpdate(
+            request.params.id,
+            {
+                name: request.body.name,
+                parentId: request.body.parentId,
+                parentCatName: request.body.parentCatName
+            },
+            { new: true }
+        )
+        if(!category){
+            response.status(404).json({
+                message: "Sub Category not found",
+                success:false,
+                error:true
+          })
+        }
+        //image null
+        imageArr=[];
+        response.status(200).json({
+            message: " sub Category  updated successfully",
+            success:true,
+            error:false,
+            category:category
         })
+    }
+    catch(error){
+      console.error(error)
+        return response.status(500).json({
+        message: "Internal Server Error",
+        success:false,
+        error:true
+      })
   }
 }
+
 
 
 

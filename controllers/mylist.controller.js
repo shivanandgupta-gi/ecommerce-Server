@@ -1,7 +1,7 @@
 import MyListModel from "../models/myList.model.js";
 
 //add to list
-export async function addToMyList   (request, response) {
+export async function addToMyList (request, response) {
   try {
     const userId=request.userId //get from middlware for login user
     const {productId, productTitle, image, rating, price, oldPrice, discount, brand}=request.body;
@@ -13,7 +13,7 @@ export async function addToMyList   (request, response) {
      //check if item is already
     if(item){
         return response.status(400).json({
-            message: "Item Already Added",
+            message: "Item Already Added in Wishlist",
             success:false,
             error:true
         })
@@ -35,7 +35,7 @@ export async function addToMyList   (request, response) {
     const save=await myList.save();
 
     return response.status(200).json({
-        message: "Item Added Successfully",
+        message: "Item Added in Wishlist",
         success:true,
         error:false,
         data:save

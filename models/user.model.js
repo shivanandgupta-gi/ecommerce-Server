@@ -37,7 +37,7 @@ const userSchema = mongoose.Schema({
         enum: ["Active", "Inactive", "Suspended"], //only one passes
         default: "Active"
     },
-    address_details: [
+    address_details: [ 
         {
             type: mongoose.Schema.ObjectId,
             ref: 'address'  //new table of address
@@ -74,6 +74,10 @@ const userSchema = mongoose.Schema({
         enum: ['ADMIN', 'USER'],
         default: 'USER'
     },
+    signUpWithGoogle:{
+        type:Boolean,
+        default:false
+    },
     access_token:{
         type:String,
         default:''
@@ -81,9 +85,8 @@ const userSchema = mongoose.Schema({
     refresh_token:{
         type:String,
         default:''
-    }
-}
-,{timestamp:true}
+    } 
+},{timestamps:true}
 );
 
 const userModel=mongoose.model("User",userSchema);
