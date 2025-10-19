@@ -1,6 +1,5 @@
 // Import core modules
-import express from 'express';         // Web framework for Node.js
-import cors from 'cors';               // Middleware to enable Cross-Origin Resource Sharing
+import express from 'express';                   // Middleware to enable Cross-Origin Resource Sharing
 import dotenv from 'dotenv';           // Loads environment variables from a .env file
 dotenv.config();                       // Initialize dotenv
 import cookieParser from 'cookie-parser'; // Parses cookies attached to client requests
@@ -20,62 +19,75 @@ import bannerRouterV1 from './route/bannerV1.route.js';
 import orderRouter from './route/order.route.js';
 
 
-// Create an Express application
+
+// Create Express app
 const app = express();
-// app.use(cors({
-//     origin: "http://localhost:5173", // frontend URL
-//     credentials: true
-// }));
-//make the crocs dynmaically such that it can use at different port
-const allowedOrigins = [
-  "http://localhost:5173",        // for local dev
-  "https://mydukan1.netlify.app/"  // your deployed frontend
-];
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps or curl)
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      } else {
-        return callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true, // if using cookies or authentication
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  })
-);
+
+
 
 const PORT = process.env.PORT || 5000;
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "https://mydukan1.netlify.app",
+    "https://mydukan1.netlify.app/"
+  ];
 
-app.use(express.json()); // Parses incoming JSON requests
-app.use(cookieParser()); // Parses cookies from the request headers
-app.use(morgan("dev"));       // Logs HTTP requests to the console
-app.use(helmet({         // Secures HTTP headers
-    crossOriginResourcePolicy: false
-}));
+  if (origin && ALLOWED_ORIGINS.some(o => origin.startsWith(o))) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  );
+  res.setHeader("X-Debug-Origin", origin || "none");
 
-// Basic route handler
-app.get("/", (request, response) => {
-    response.json({
-        message: "Server is running " + PORT
-    });
+  if (req.method === "OPTIONS") {
+     console.log("✅ Preflight handled for:", origin, req.path);
+    return res.sendStatus(200).end();
+  }
+  next();
 });
 
-app.use('/api/user',userRoutes);
-app.use('/api/category',categoryRouter);
-app.use('/api/product' ,productRoute);
-app.use('/api/cart' , cartRouter);
-app.use('/api/myList', myListRoute);
-app.use('/api/address' , addressRouter);
-app.use('/api/slide' , sliderRoute);
-app.use('/api/blog',blogRoute);
-app.use('/api/banner',bannerRouterV1);
-app.use('/api/order',orderRouter);
+// 2️⃣ THEN body parsing and cookies
+app.use(express.json());
+app.use(cookieParser());
 
-connectDB().then(()=>{
-    app.listen(PORT,()=>{
-        console.log("server is running",PORT);
-    })
-})
+// 3️⃣ THEN security and logging
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+  })
+);
+app.use(morgan("dev"));
+
+// 4️⃣ Routes (after everything)
+app.get("/", (req, res) => {
+  res.json({ message: "Server running on port " + PORT });
+});
+
+app.use("/api/user", userRoutes);
+app.use("/api/category", categoryRouter);
+app.use("/api/product", productRoute);
+app.use("/api/cart", cartRouter);
+app.use("/api/myList", myListRoute);
+app.use("/api/address", addressRouter);
+app.use("/api/slide", sliderRoute);
+app.use("/api/blog", blogRoute);
+app.use("/api/banner", bannerRouterV1);
+app.use("/api/order", orderRouter);
+
+// 5️⃣ Error handler
+app.use((err, req, res, next) => {
+  console.error("Unhandled server error:", err.stack || err);
+  res.status(500).json({ error: "Internal Server Error" });
+});
+
+// 6️⃣ DB connection and listen
+connectDB().then(() => {
+  app.listen(PORT, () => console.log("✅ Server running on port", PORT));
+});
