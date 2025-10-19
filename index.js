@@ -27,18 +27,27 @@ const app = express();
 //     credentials: true
 // }));
 //make the crocs dynmaically such that it can use at different port
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || origin.startsWith("http://localhost")) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true
-}));
+const allowedOrigins = [
+  "http://localhost:5173",        // for local dev
+  "https://mydukan1.netlify.app/"  // your deployed frontend
+];
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        return callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true, // if using cookies or authentication
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  })
+);
 
-
+const PORT = process.env.PORT || 5000;
 
 app.use(express.json()); // Parses incoming JSON requests
 app.use(cookieParser()); // Parses cookies from the request headers
@@ -50,7 +59,7 @@ app.use(helmet({         // Secures HTTP headers
 // Basic route handler
 app.get("/", (request, response) => {
     response.json({
-        message: "Server is running " + process.env.PORT
+        message: "Server is running " + PORT
     });
 });
 
@@ -66,7 +75,7 @@ app.use('/api/banner',bannerRouterV1);
 app.use('/api/order',orderRouter);
 
 connectDB().then(()=>{
-    app.listen(process.env.PORT,()=>{
-        console.log("server is running",process.env.PORT);
+    app.listen(PORT,()=>{
+        console.log("server is running",PORT);
     })
 })
