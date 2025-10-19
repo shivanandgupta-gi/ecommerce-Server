@@ -32,7 +32,9 @@ app.use((req, res, next) => {
     "http://localhost:5173",
     "http://localhost:5174",
     "https://mydukan1.netlify.app",
-    "https://mydukan1.netlify.app/"
+    "https://mydukan1.netlify.app/",
+    "https://mydukan2.netlify.app/",
+    "https://mydukan2.netlify.app"
   ];
 
   if (origin && ALLOWED_ORIGINS.some(o => origin.startsWith(o))) {
