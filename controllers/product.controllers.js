@@ -290,7 +290,7 @@ export async function getProductsBySubCategoryId(request, response) {
     //finding all product
     //const page = 2;  const perPage = 5;
     const subCatId = request.params.id;
-    const products = await ProductModel.find({ subCatId: subCatId }).populate("Category")
+    const products = await ProductModel.find({ subCatId: subCatId }).populate("category")
       .skip((page - 1) * perPage)  //skip 5 documents
       .limit(perPage)  //retunn  5 documents
       .exec();
@@ -1417,7 +1417,7 @@ export async function filter(request, response) {
   //it obtained data from frontend to filter
   const { catId, subCatId, thirdsubCatId, minPrice, maxPrice, rating, page, limit } = request.body;
   //filter object create and then send this filter
-  const filters = { }
+  const filters = {}
   if (catId.length) { //for matching that category id and put category in filters object
     filters.catId = { $in: catId }  //$in is a MongoDB operator that means “match any value from the given array”.
   }
@@ -1429,22 +1429,25 @@ export async function filter(request, response) {
   }
   //for price
   if (minPrice || maxPrice) { //The + converts a string to a number (unary plus).
-    filters.price = { $gte: +minPrice || 0, $lte: +maxPrice || Infinity }; //$gte means greater than or equal to.
+    filters.price = {};
+    if (minPrice) filters.price.$gte = +minPrice;
+    if (maxPrice) filters.price.$lte = +maxPrice;
+ //$gte means greater than or equal to.
   }
   //for rating
   if (rating.length) { //for matching that category id and put category in filters object
     filters.rating = { $in: rating }
   }
   try {
-    const products=await ProductModel.find(filters).populate("Category".skip(page-1)*limit).
-    limit(paeseInt(limit));
+    const products=await ProductModel.find(filters).populate("category").skip((page-1)*limit).
+    limit(parseInt(limit));
     const total=await ProductModel.countDocuments(filters);
     return response.status(200).json({
       error:false,
       success:true,
       products:products,
       total:total,
-      page:parseInt,
+      page:parseInt(page),
       totalPages:Math.ceil(total/limit)
     })
   }
@@ -1455,6 +1458,93 @@ export async function filter(request, response) {
       error: true,
       success: false
     })
+  }
+}
+
+// const sortItems=(products,sortBy,order)=>{
+//   return products.sort((a,b)=>{
+//     if(sortBy === 'name'){
+//        return order === 'asc' ? a.name.localCompare(b.name) :
+//             b.name.localCompare(a.name)
+//     }
+//     if(sortBy === 'price'){
+//       return order === 'asc' ? a.price - b.price : b.price - a.price
+//     }
+//     return ;
+//   })
+// }
+
+//sorting the product in filter page
+// export async function sortByController(request,response) {
+//   try{
+//     const {products, sortBy,order}=request.body;
+//     const sortedItems= sortItems([...products?.product],sortBy,order);
+    
+//     return response.status(200).json({
+//       error:"false",
+//       success:"true",
+//       products:sortedItems,
+//       page:0,
+//       totalPages:0
+//     })
+//   }
+//   catch (error) {
+//     console.error(error)
+//     return response.status(500).json({
+//       message: "Internal Server Error",
+//       error: true,
+//       success: false
+//     })
+//   }
+// }
+
+
+const sortItems = (products, sortBy, order) => {
+  return products.sort((a, b) => {
+    if (sortBy === 'name') {
+      return order === 'asc'
+        ? a.name.localeCompare(b.name)
+        : b.name.localeCompare(a.name);
+    }
+
+    if (sortBy === 'price') {
+      return order === 'asc' ? a.price - b.price : b.price - a.price;
+    }
+    // if sortBy is unknown
+    return 0;
+  });
+};
+
+// sorting the product in filter page
+export async function sortByController(request, response) {
+  try {
+    const { products, sortBy, order } = request.body;
+
+    // ✅ products is already an array
+    if (!Array.isArray(products)) {
+      return response.status(400).json({
+        error: true,
+        success: false,
+        message: "Products must be an array",
+      });
+    }
+
+    const sortedItems = sortItems([...products], sortBy, order);
+
+    return response.status(200).json({
+      error: false,
+      success: true,
+      products: sortedItems,
+      page: 0,
+      totalPages: 0,
+    });
+  } catch (error) {
+    console.error("Error in sortByController:", error);
+    return response.status(500).json({
+      message: "Internal Server Error",
+      error: true,
+      success: false,
+    });
   }
 }
 

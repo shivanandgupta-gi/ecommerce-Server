@@ -1,7 +1,7 @@
 import {Router} from 'express';
 import upload from '../middlewares/multer.js';
 import auth from '../middlewares/auth.js';
-import { countProduct, createProduct, createRAMS, createSize, createWeight, deleteMultipleProduct, deleteProduct, deleteProductRAMS, deleteProductSize, deleteProductWeight, filter, getFeaturedProduct, getProducts, getProductsByCategoryId, getProductsByCategoryName, getProductsByRAMSId, getProductsByRating, getProductsBySizeId, getProductsBySubCategoryId, getProductsBySubCategoryName, getProductsByThirdLevelSubCategoryId, getProductsByWeightId, getProductsRAMS, getProductsSize, getProductsWeight, getSingleProduct, priceFilter, removeImageController, searchProductController, updateProductController, updateProductRAMS, updateProductSize, updateProductWeight, uploadBannerImages, uploadImages } from '../controllers/product.controllers.js';
+import { countProduct, createProduct, createRAMS, createSize, createWeight, deleteMultipleProduct, deleteProduct, deleteProductRAMS, deleteProductSize, deleteProductWeight, filter, getFeaturedProduct, getProducts, getProductsByCategoryId, getProductsByCategoryName, getProductsByRAMSId, getProductsByRating, getProductsBySizeId, getProductsBySubCategoryId, getProductsBySubCategoryName, getProductsByThirdLevelSubCategoryId, getProductsByWeightId, getProductsRAMS, getProductsSize, getProductsWeight, getSingleProduct, priceFilter, removeImageController, searchProductController, sortByController, updateProductController, updateProductRAMS, updateProductSize, updateProductWeight, uploadBannerImages, uploadImages } from '../controllers/product.controllers.js';
 
 
 const productRoute=Router();
@@ -20,7 +20,7 @@ productRoute.get("/getAllProductByRating",getProductsByRating);
 productRoute.get("/getAllProductCount",countProduct);
 productRoute.get("/getAllFeaturedProduct",getFeaturedProduct);
 productRoute.delete("/deleteProduct/:id",auth,deleteProduct);
-productRoute.get("/getSingleProduct/:id",getSingleProduct);
+productRoute.get("/getSingleProduct/:id",getSingleProduct); 
 productRoute.delete("/deleteImages",auth,removeImageController);
 productRoute.put("/updateProduct/:id",auth,updateProductController);
 productRoute.delete("/deletemultiple",auth,deleteMultipleProduct);
@@ -48,5 +48,7 @@ productRoute.post("/filters",filter)
 
 //searching
 productRoute.post("/search",searchProductController)
+productRoute.post("/sortBy",sortByController)
+
 
 export default productRoute;

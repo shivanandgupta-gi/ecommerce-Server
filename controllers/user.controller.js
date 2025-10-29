@@ -458,75 +458,55 @@ export async function removeImageController(request, response) {
   }
 }
 
-
-//update user detail
+// Update User Details Controller
 export async function updateUserDetailsController(request, response) {
   try {
-    const userId = request.userId || request.params.id;//taking user id from middleware
-    const { name, email, mobile, password } = request.body;
+    // take userId from middleware (auth) or params (admin update)
+    const userId = request.userId || request.params.id;
+    const { name, email, mobile } = request.body;
 
+    // check if user exists
     const userExist = await userModel.findById(userId);
-    if (!userExist)
-      return response.status(400).send('The user cannot be Updated!');
-
-    let verifyCode = "";
-    //if mail and usernot match then send mail to user
-    if (email !== userExist.email) {
-      verifyCode = Math.floor(100000 + Math.random() * 900000).toString();
+    if (!userExist) {
+      return response.status(404).json({
+        success: false,
+        error: true,
+        message: "User not found!",
+      });
     }
-    //password hashsing
-    let hashPassword = ""
-
-    if (password) {
-      const salt = await bcryptjs.genSalt(10)
-      hashPassword = await bcryptjs.hash(password, salt)
-    } else {
-      hashPassword = userExist.password
-    }
-    //user upadate
-    const updateUser = await userModel.findByIdAndUpdate(
+    // update user
+    const updatedUser = await userModel.findByIdAndUpdate(
       userId,
       {
-        name: name,
-        mobile: mobile,
-        email: email,
-        verify: email ? false : true,
-        password: hashPassword,
-        otp: verifyCode == "" ? verifyCode : null,
-        otpExpires: verifyCode == "" ? Date.now() + 600000 : "",
+        name: name || userExist.name,
+        mobile: mobile || userExist.mobile,
+        email: email || userExist.email
       },
       { new: true }
-    )
-    if (email !== userExist.email) {
-      // Send verification email
-      await sendEmailFun({
-        sendTo: email,
-        subject: "Verify email from Ecommerce App",
-        text: "",
-        html: VerificationEmail(name, verifyCode)
-      })
-    }
-    return response.json({
-      message: "user upadate successfully",
-      success: "true",
-      error: "false",
-      user: {
-        name: userUpdate.name,
-        _id: userUpdate._id,
-        email: userUpdate.email,
-        mobile: userUpdate.mobile,
-        avatar: userUpdate.avatar,
-      }
-    })
-  }
-  catch (error) {
-    return response.status(500).json({
-      message: "Internal Server Error",
+    );
 
-      error: "true"
-    })
+    return response.status(200).json({
+      success: true,
+      error: false,
+      message: "User updated successfully",
+      data: {
+        _id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        mobile: updatedUser.mobile,
+        avatar: updatedUser.avatar,
+      },
+    });
+  } catch (error) {
+    console.error("Update User Error:", error);
+    return response.status(500).json({
+      success: false,
+      error: true,
+      message: "Internal Server Error",
+    });
   }
 }
+
 
 //for forgot password
 export async function forgotPassword(request, response) {

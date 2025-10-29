@@ -17,6 +17,7 @@ import sliderRoute from './route/homeSliderBanner.js';
 import blogRoute from './route/blog.route.js';
 import bannerRouterV1 from './route/bannerV1.route.js';
 import orderRouter from './route/order.route.js';
+import adsRouter from './route/ads.router.js';
 
 
 
@@ -82,6 +83,7 @@ app.use("/api/slide", sliderRoute);
 app.use("/api/blog", blogRoute);
 app.use("/api/banner", bannerRouterV1);
 app.use("/api/order", orderRouter);
+app.use("/api/ads",adsRouter);
 
 // 5️⃣ Error handler
 app.use((err, req, res, next) => {
